@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  pages: write
+  actions: write
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -31,6 +31,9 @@ jobs:
       - name: Update the published sample
         run: |
           touch demo/.nojekyll
+          mkdir -p demo/.github/workflows
+          cp .github/workflows/deploy-pages.yml demo/.github/workflows/deploy-pages.yml
+          node -e 'require("node:fs").writeFileSync("demo/deployment.json", JSON.stringify({repository: process.env.GITHUB_REPOSITORY, sourceCommit: process.env.GITHUB_SHA, version: require("./package.json").version}, null, 2) + "\n")'
           rsync -a --delete --exclude='.git/' demo/ published/
           cd published
           git config user.name 'github-actions[bot]'
@@ -40,10 +43,14 @@ jobs:
             git commit -m "Publish sample for ${GITHUB_SHA}"
             git push origin HEAD:gh-pages
           fi
-      - name: Request GitHub Pages build
+      - name: Dispatch GitHub Pages deployment
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
-            const response = await github.rest.repos.requestPagesBuild({ owner, repo });
-            core.info(`Pages build requested: ${response.status}`);
+            await github.rest.actions.createWorkflowDispatch({
+              owner, repo,
+              workflow_id: 'deploy-pages.yml',
+              ref: 'gh-pages'
+            });
+            core.info('GitHub Pages deployment dispatched on gh-pages.');
