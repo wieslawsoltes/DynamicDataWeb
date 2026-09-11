@@ -16,7 +16,7 @@ npm run build
 npm run demo
 ```
 
-The demo opens at `http://localhost:4173`. The GitHub Pages workflow in `.github/workflows/pages.yml` validates each push to `main`, updates the `gh-pages` publishing branch, and dispatches `.github/workflows/deploy-pages.yml` on that branch to publish the static artifact. It can also be run manually. The repository Pages source is the root of `gh-pages`. No backend, account, API key, CDN or remote runtime dependency is required. The sample market data is generated locally and is not financial data.
+The demo opens at `http://localhost:4173`. The GitHub Pages workflow in `.github/workflows/pages.yml` validates each push to `main`, updates a static copy on `gh-pages`, and deploys the built demo using GitHub's official Pages artifact and deployment actions. It can also be run manually. Deployment runs from `main` through the `github-pages` environment. No backend, account, API key, CDN or remote runtime dependency is required. The sample market data is generated locally and is not financial data.
 
 ## Use in a JavaScript application
 
