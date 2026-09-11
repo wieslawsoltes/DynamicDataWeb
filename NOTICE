@@ -1,0 +1,8 @@
+DynamicData RxJS
+
+JavaScript adaptation of DynamicData (https://github.com/reactivemarbles/DynamicData),
+MIT licensed, Copyright (c) Roland Pheasant 2011-2022.
+Baseline commit: ef790af138811c3268c9bb687886c2acbd0b66c0 (10.0 preview).
+
+Uses RxJS 7.8.2 (https://github.com/ReactiveX/rxjs), Apache-2.0 licensed.
+The self-contained browser bundle includes RxJS. Its license is in docs/RXJS-LICENSE.txt.

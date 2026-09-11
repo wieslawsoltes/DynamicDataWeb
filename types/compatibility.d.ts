@@ -1,0 +1,2 @@
+// Module entry point: the same generic contracts as the public package.
+export { BindingOptions, DynamicDataOptions, ObservableCollectionExtended, PageRequest, SortAndBindOptions, SortDirection, SortExpressionComparer, SortOptions, VirtualRequest, addOrUpdate, clear, editDiff, fluent, installFluentOperators, isEmpty, isNotEmpty, maximum, minimum, observeOn, observeOnDispatcher, refresh, remove, removeKeys, subscribeOn } from './index.js';

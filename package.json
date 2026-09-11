@@ -1,0 +1,88 @@
+{
+  "name": "dynamicdata-rxjs",
+  "version": "0.1.0",
+  "description": "Reactive keyed caches and ordered lists for JavaScript and TypeScript, powered by RxJS.",
+  "main": "./dist/index.cjs",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node scripts/build.mjs && node scripts/prepare-demo.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "check:types": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext test/types.ts",
+    "demo": "node scripts/serve.mjs",
+    "audit:api": "node docs/generate-api-mapping.mjs",
+    "prepack": "npm run build",
+    "test:demo": "node --test test/demo.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "happy-dom": "^20.14.3",
+    "rxjs": "^7.8.2",
+    "typescript": "^7.0.2"
+  },
+  "module": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "sideEffects": [
+    "./src/index.js"
+  ],
+  "files": [
+    "src",
+    "dist",
+    "types",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": "./dist/dynamicdata.js",
+    "./package.json": "./package.json",
+    "./core": {
+      "types": "./types/core.d.ts",
+      "import": "./src/core.js"
+    },
+    "./operators": {
+      "types": "./types/operators.d.ts",
+      "import": "./src/operators.js"
+    },
+    "./advanced": {
+      "types": "./types/advanced.d.ts",
+      "import": "./src/advanced.js"
+    },
+    "./lifecycle": {
+      "types": "./types/lifecycle.d.ts",
+      "import": "./src/lifecycle.js"
+    },
+    "./extras": {
+      "types": "./types/extras.d.ts",
+      "import": "./src/extras.js"
+    },
+    "./helpers": {
+      "types": "./types/helpers.d.ts",
+      "import": "./src/helpers.js"
+    },
+    "./kernel": {
+      "types": "./types/kernel.d.ts",
+      "import": "./src/kernel.js"
+    }
+  },
+  "peerDependencies": {
+    "rxjs": "^7.8.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wieslawsoltes/DynamicDataWeb.git"
+  },
+  "homepage": "https://wieslawsoltes.github.io/DynamicDataWeb/",
+  "bugs": {
+    "url": "https://github.com/wieslawsoltes/DynamicDataWeb/issues"
+  }
+}

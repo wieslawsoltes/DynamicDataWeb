@@ -1,0 +1,453 @@
+{
+  "ImmutableGroup": [
+    "advanced.js"
+  ],
+  "standardDeviation": [
+    "advanced.js"
+  ],
+  "innerJoinMany": [
+    "advanced.js"
+  ],
+  "CombineOperator": [
+    "advanced.js"
+  ],
+  "average": [
+    "advanced.js"
+  ],
+  "avg": [
+    "advanced.js"
+  ],
+  "groupWithImmutableState": [
+    "advanced.js"
+  ],
+  "fullJoinMany": [
+    "advanced.js"
+  ],
+  "xor": [
+    "advanced.js"
+  ],
+  "sumMany": [
+    "advanced.js"
+  ],
+  "combine": [
+    "advanced.js"
+  ],
+  "max": [
+    "advanced.js"
+  ],
+  "min": [
+    "advanced.js"
+  ],
+  "groupOnImmutable": [
+    "advanced.js"
+  ],
+  "rightJoinMany": [
+    "advanced.js"
+  ],
+  "and": [
+    "advanced.js"
+  ],
+  "sum": [
+    "advanced.js"
+  ],
+  "stdDev": [
+    "advanced.js"
+  ],
+  "fullJoin": [
+    "advanced.js"
+  ],
+  "innerJoin": [
+    "advanced.js"
+  ],
+  "except": [
+    "advanced.js"
+  ],
+  "count": [
+    "advanced.js"
+  ],
+  "groupOnObservable": [
+    "advanced.js"
+  ],
+  "leftJoinMany": [
+    "advanced.js"
+  ],
+  "groupOn": [
+    "advanced.js"
+  ],
+  "group": [
+    "advanced.js"
+  ],
+  "Group": [
+    "advanced.js"
+  ],
+  "rightJoin": [
+    "advanced.js"
+  ],
+  "or": [
+    "advanced.js"
+  ],
+  "leftJoin": [
+    "advanced.js"
+  ],
+  "ensureUniqueKeys": [
+    "extras.js",
+    "operators.js"
+  ],
+  "whereReasonsAreNot": [
+    "extras.js"
+  ],
+  "queryWhenChanged": [
+    "extras.js"
+  ],
+  "forEachItemChange": [
+    "extras.js"
+  ],
+  "updateIndex": [
+    "extras.js"
+  ],
+  "transformToTree": [
+    "extras.js"
+  ],
+  "forEachChange": [
+    "extras.js"
+  ],
+  "Node": [
+    "extras.js"
+  ],
+  "startWithEmpty": [
+    "extras.js"
+  ],
+  "QuerySnapshot": [
+    "extras.js"
+  ],
+  "toSortedCollection": [
+    "extras.js"
+  ],
+  "includeUpdateWhen": [
+    "extras.js"
+  ],
+  "removeIndex": [
+    "extras.js"
+  ],
+  "populateInto": [
+    "extras.js"
+  ],
+  "flatten": [
+    "extras.js"
+  ],
+  "excludeUpdateWhen": [
+    "extras.js"
+  ],
+  "whereReasonsAre": [
+    "extras.js"
+  ],
+  "adapt": [
+    "extras.js"
+  ],
+  "addKey": [
+    "extras.js"
+  ],
+  "flattenChanges": [
+    "extras.js"
+  ],
+  "itemChanges": [
+    "extras.js"
+  ],
+  "clone": [
+    "extras.js"
+  ],
+  "TransformWithInlineUpdate": [
+    "operators.js"
+  ],
+  "Sort": [
+    "operators.js"
+  ],
+  "TransformMany": [
+    "operators.js"
+  ],
+  "bind": [
+    "operators.js"
+  ],
+  "TransformImmutable": [
+    "operators.js"
+  ],
+  "Page": [
+    "operators.js"
+  ],
+  "Reverse": [
+    "operators.js"
+  ],
+  "Top": [
+    "operators.js"
+  ],
+  "transformWithInlineUpdate": [
+    "operators.js"
+  ],
+  "top": [
+    "operators.js"
+  ],
+  "EnsureUniqueKeys": [
+    "operators.js"
+  ],
+  "changeKey": [
+    "operators.js"
+  ],
+  "TransformSafe": [
+    "operators.js"
+  ],
+  "transformImmutable": [
+    "operators.js"
+  ],
+  "distinctValues": [
+    "operators.js"
+  ],
+  "transformMany": [
+    "operators.js"
+  ],
+  "filter": [
+    "operators.js"
+  ],
+  "filterImmutable": [
+    "operators.js"
+  ],
+  "AsObservableList": [
+    "operators.js"
+  ],
+  "removeKey": [
+    "operators.js"
+  ],
+  "bindToObservableList": [
+    "operators.js"
+  ],
+  "BindToObservableCollection": [
+    "operators.js"
+  ],
+  "RemoveKey": [
+    "operators.js"
+  ],
+  "SortAndVirtualise": [
+    "operators.js"
+  ],
+  "bindToObservableCollection": [
+    "operators.js"
+  ],
+  "filterWithState": [
+    "operators.js"
+  ],
+  "reverse": [
+    "operators.js"
+  ],
+  "DistinctValues": [
+    "operators.js"
+  ],
+  "SortAndBind": [
+    "operators.js"
+  ],
+  "virtualize": [
+    "operators.js"
+  ],
+  "SortAndPage": [
+    "operators.js"
+  ],
+  "Bind": [
+    "operators.js"
+  ],
+  "Virtualize": [
+    "operators.js"
+  ],
+  "sortAndVirtualise": [
+    "operators.js"
+  ],
+  "FilterWithState": [
+    "operators.js"
+  ],
+  "toCollection": [
+    "operators.js"
+  ],
+  "page": [
+    "operators.js"
+  ],
+  "Virtualise": [
+    "operators.js"
+  ],
+  "virtualise": [
+    "operators.js"
+  ],
+  "BindToObservableList": [
+    "operators.js"
+  ],
+  "ToCollection": [
+    "operators.js"
+  ],
+  "sortAndBind": [
+    "operators.js"
+  ],
+  "asObservableCache": [
+    "operators.js"
+  ],
+  "asObservableList": [
+    "operators.js"
+  ],
+  "sort": [
+    "operators.js"
+  ],
+  "AsObservableCache": [
+    "operators.js"
+  ],
+  "transformSafe": [
+    "operators.js"
+  ],
+  "ChangeKey": [
+    "operators.js"
+  ],
+  "transform": [
+    "operators.js"
+  ],
+  "Filter": [
+    "operators.js"
+  ],
+  "Transform": [
+    "operators.js"
+  ],
+  "sortAndPage": [
+    "operators.js"
+  ],
+  "FilterImmutable": [
+    "operators.js"
+  ],
+  "notEmpty": [
+    "lifecycle.js"
+  ],
+  "whenPropertyChanged": [
+    "lifecycle.js"
+  ],
+  "expireAfter": [
+    "lifecycle.js"
+  ],
+  "batch": [
+    "lifecycle.js"
+  ],
+  "onItemRefreshed": [
+    "lifecycle.js"
+  ],
+  "disposeMany": [
+    "lifecycle.js"
+  ],
+  "mergeManyItems": [
+    "lifecycle.js"
+  ],
+  "toObservableChangeSet": [
+    "lifecycle.js"
+  ],
+  "autoRefresh": [
+    "lifecycle.js"
+  ],
+  "watch": [
+    "lifecycle.js"
+  ],
+  "transformSafeAsync": [
+    "lifecycle.js"
+  ],
+  "onItemAdded": [
+    "lifecycle.js"
+  ],
+  "limitSizeTo": [
+    "lifecycle.js"
+  ],
+  "createObservableObject": [
+    "lifecycle.js"
+  ],
+  "subscribeMany": [
+    "lifecycle.js"
+  ],
+  "skipInitial": [
+    "lifecycle.js"
+  ],
+  "mergeMany": [
+    "lifecycle.js"
+  ],
+  "onItemRemoved": [
+    "lifecycle.js"
+  ],
+  "deferUntilLoaded": [
+    "lifecycle.js"
+  ],
+  "observeProperty": [
+    "lifecycle.js"
+  ],
+  "onItemUpdated": [
+    "lifecycle.js"
+  ],
+  "bufferIf": [
+    "lifecycle.js"
+  ],
+  "ObservableChangeSet": [
+    "lifecycle.js"
+  ],
+  "autoRefreshOnObservable": [
+    "lifecycle.js"
+  ],
+  "observableObject": [
+    "lifecycle.js"
+  ],
+  "filterOnObservable": [
+    "lifecycle.js"
+  ],
+  "whenValueChanged": [
+    "lifecycle.js"
+  ],
+  "transformAsync": [
+    "lifecycle.js"
+  ],
+  "transformOnObservable": [
+    "lifecycle.js"
+  ],
+  "notifyPropertyChanged": [
+    "lifecycle.js"
+  ],
+  "ChangeReason": [
+    "core.js"
+  ],
+  "RangeChange": [
+    "core.js"
+  ],
+  "ChangeType": [
+    "core.js"
+  ],
+  "SourceCache": [
+    "core.js"
+  ],
+  "ListChange": [
+    "core.js"
+  ],
+  "ObservableList": [
+    "core.js"
+  ],
+  "Change": [
+    "core.js"
+  ],
+  "ItemChange": [
+    "core.js"
+  ],
+  "ChangeSet": [
+    "core.js"
+  ],
+  "ListChangeReason": [
+    "core.js"
+  ],
+  "applyChanges": [
+    "core.js"
+  ],
+  "ObservableCache": [
+    "core.js"
+  ],
+  "SourceList": [
+    "core.js"
+  ],
+  "snapshotChanges": [
+    "core.js"
+  ],
+  "Optional": [
+    "core.js"
+  ]
+}

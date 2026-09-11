@@ -1,0 +1,49 @@
+name: Publish sample to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run check:types
+      - run: npm pack --ignore-scripts --pack-destination demo
+      - name: Check out the publishing branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: published
+      - name: Update the published sample
+        run: |
+          touch demo/.nojekyll
+          rsync -a --delete --exclude='.git/' demo/ published/
+          cd published
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --all
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish sample for ${GITHUB_SHA}"
+            git push origin HEAD:gh-pages
+          fi
+      - name: Request GitHub Pages build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const response = await github.rest.repos.requestPagesBuild({ owner, repo });
+            core.info(`Pages build requested: ${response.status}`);

@@ -1,0 +1,38 @@
+{
+  "runtime": "v24.19.0",
+  "platform": "linux",
+  "date": "2026-09-11T09:24:59.034Z",
+  "notes": "Single runs; process warm-up and local machine contention affect results. Sorted snapshots and arrays require linear copy/shift work. This is not a cross-library benchmark.",
+  "scenarios": [
+    {
+      "size": 1000,
+      "ingestMs": 1.452,
+      "edit1000Ms": 0.87,
+      "projection100DeltaMs": 0.671,
+      "projectionFactoryCalls": 100,
+      "sortInitialMs": 4.977,
+      "sort100BatchDeltaMs": 1.055,
+      "batches": 4
+    },
+    {
+      "size": 10000,
+      "ingestMs": 5.846,
+      "edit1000Ms": 1.013,
+      "projection100DeltaMs": 0.671,
+      "projectionFactoryCalls": 100,
+      "sortInitialMs": 23.199,
+      "sort100BatchDeltaMs": 2.426,
+      "batches": 4
+    },
+    {
+      "size": 100000,
+      "ingestMs": 67.896,
+      "edit1000Ms": 1.127,
+      "projection100DeltaMs": 0.296,
+      "projectionFactoryCalls": 100,
+      "sortInitialMs": 173.868,
+      "sort100BatchDeltaMs": 45.094,
+      "batches": 4
+    }
+  ]
+}

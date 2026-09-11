@@ -1,0 +1,2 @@
+// Module entry point: the same generic contracts as the public package.
+export { AggregateType, CombineOperator, Group, ImmutableGroup, and, average, avg, combine, count, except, forAggregation, fullJoin, fullJoinMany, group, groupOn, groupOnImmutable, groupOnObservable, groupOnProperty, groupOnPropertyWithImmutableState, groupWithImmutableState, groupWithSpecifiedGroups, innerJoin, innerJoinMany, invalidateWhen, leftJoin, leftJoinMany, max, min, or, rightJoin, rightJoinMany, standardDeviation, stdDev, sum, sumMany, xor } from './index.js';

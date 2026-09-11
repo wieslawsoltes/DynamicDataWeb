@@ -1,0 +1,2 @@
+// Module entry point: the same generic contracts as the public package.
+export { Error, ErrorInfo, ItemWithIndex, ItemWithValue, OptionElse, SortExpression, asArray, asList, convertOptional, convertOr, createOptional, duplicates, firstOrOptional, fromOptional, getValueOrDefault, ifHasValue, indexOfMany, lookup, onHasNoValue, onHasValue, orElse, removeIfContained, selectValues, toOptional, valueOr, valueOrDefault, valueOrThrow } from './index.js';
