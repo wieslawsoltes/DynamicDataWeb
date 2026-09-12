@@ -59,3 +59,21 @@ The implementation chunks large range insertions to avoid JavaScript argument-co
 The tests in `test/core.test.js`, `test/operators.test.js`, `test/advanced.test.js`, `test/lifecycle.test.js`, and `test/extras.test.js` cover source transactions, duplicate list occurrences, change replay, filter/projection transitions, sorted windows, grouping/join ownership, timers, cancellation/cleanup, and utility behavior. They are targeted JavaScript regressions; the full upstream C# fixture suite has not been mechanically translated or differentially executed against this package.
 
 The remaining compatibility work includes overload-by-overload differential tests, identical change-batch compression, full expression-tree property dependency tracking, the full .NET collection binding/context option contract, numeric-type fidelity where needed, and helper/type members marked missing in the generated mapping. Platform thread/parallel APIs require a separately designed web worker contract. Export aliases and interface declarations should not be used to close those items without exercising their behavior.
+
+## Native ReactiveWeb interoperability (0.1.1)
+
+The property operators recognize structural RxJS `Changed`, `PropertyChanged`
+and lowercase equivalents in addition to the port's observable-object proxies.
+ReactiveWeb `PropertyName`/`Value`/`OldValue` events and unspecified-property
+notifications refresh the matching subscriptions. Nested paths rewire when an
+intermediate object is replaced, and aliases do not duplicate subscriptions.
+Lifecycle resources may expose `.Dispose()` or `.DisposeAsync()` as well as
+JavaScript/RxJS disposal methods.
+
+`Bind` forwards the original batch to targets exposing `ApplyChanges` or
+`applyChanges`, which lets ReactiveWeb retain indexed changes and object
+lifetimes. PascalCase `Edit`/`Clear`/`AddRange` collection targets are also
+recognized. These structural hooks do not add a dependency on ReactiveWeb.
+
+`test/reactive-interop.test.js` and `test/reactive-interop-types.ts` verify these
+contracts, cleanup after synchronous errors and shared public helper identity.

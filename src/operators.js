@@ -515,11 +515,23 @@ export function bind(target) {
     const model = new Model();
     return source.subscribe({ next: changes => {
       try {
+        const apply = typeof target.ApplyChanges === 'function' ? target.ApplyChanges : target.applyChanges;
+        if (typeof apply === 'function') {
+          apply.call(target, changes);
+          observer.next(changes);
+          return;
+        }
         model.ingest(changes); const items = changes.items ? [...changes.items] : model.entries.map(e => e.value);
         if (typeof target === 'function') target(items, changes);
         else if (Array.isArray(target)) { target.length = 0; for (const item of items) target.push(item); }
         else if (typeof target.load === 'function') target.load(items);
-        else if (typeof target.edit === 'function') target.edit(updater => { updater.clear(); if (updater.addRange) updater.addRange(items); else updater.addOrUpdate(items); });
+        else if (typeof target.edit === 'function' || typeof target.Edit === 'function') (typeof target.edit === 'function' ? target.edit : target.Edit).call(target, updater => {
+          const collection = updater ?? target;
+          const clear = collection.clear ?? collection.Clear;
+          const add = collection.addRange ?? collection.AddRange ?? collection.addOrUpdate ?? collection.AddOrUpdate;
+          if (typeof clear !== 'function' || typeof add !== 'function') throw new TypeError('Binding collection updater requires Clear/clear and AddRange/addRange or AddOrUpdate/addOrUpdate.');
+          clear.call(collection); add.call(collection, items);
+        });
         else if (typeof target.next === 'function') target.next(items);
         else throw new TypeError('Unsupported binding target.');
         observer.next(changes);
@@ -531,7 +543,7 @@ export function bind(target) {
 export const bindToObservableList = bind;
 export const bindToObservableCollection = bind;
 export const sortAndBind = (targetOrComparer, comparerOrTarget, options) => {
-  const isTarget = value => Array.isArray(value) || !!value?.load || !!value?.edit;
+  const isTarget = value => Array.isArray(value) || !!value?.load || !!value?.edit || !!value?.Edit || !!value?.applyChanges || !!value?.ApplyChanges;
   const comparerFirst = isTarget(comparerOrTarget) && !isTarget(targetOrComparer);
   const target = comparerFirst ? comparerOrTarget : targetOrComparer, comparer = comparerFirst ? targetOrComparer : comparerOrTarget;
   return source => source.pipe(sort(comparer, options), bind(target));

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.1
+
+- Observe native ReactiveWeb `Changed`/`PropertyChanged` streams without proxies,
+  including nested path replacement, unspecified-property notifications and
+  shared observer cleanup.
+- Support `.Dispose()` and `.DisposeAsync()` resources in lifecycle operators.
+- Bind original change batches through `ApplyChanges`/`applyChanges` targets and
+  support collections with PascalCase editing methods.
+- Release item subscriptions after synchronous source errors and continue cleanup
+  when individual disposers throw.
+- Share `ItemWithIndex` identity between helper and kernel/root entry points.
+- Add native reactive-model, lifecycle, binding and strict type regression tests.
+
 ## 0.1.0
 
 First public npm release of DynamicDataWeb as `@wieslawsoltes/dynamicdataweb`.

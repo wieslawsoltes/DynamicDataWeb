@@ -1,13 +1,13 @@
 {
   "name": "@wieslawsoltes/dynamicdataweb",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reactive keyed caches and ordered lists for JavaScript and TypeScript, powered by RxJS.",
   "main": "./dist/cjs/index.js",
   "scripts": {
     "test": "node --test test/*.test.js",
     "build": "node scripts/build.mjs && node scripts/prepare-demo.mjs",
     "benchmark": "node scripts/benchmark.mjs",
-    "check:types": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext test/types.ts",
+    "check:types": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext test/types.ts test/reactive-interop-types.ts",
     "demo": "node scripts/serve.mjs",
     "audit:api": "node docs/generate-api-mapping.mjs",
     "prepack": "npm run build",

@@ -41,7 +41,7 @@ assert.deepEqual(Reflect.ownKeys(Observable.prototype), before, 'Import must not
 for (const subpath of ${JSON.stringify(subpaths.slice(1))}) {
   const module = LOAD(${name} + subpath.slice(1));
   assert(Object.keys(module).length > 0, 'Subpath exports must be usable');
-  for (const [key, value] of Object.entries(module)) if (key in root && !(subpath === './helpers' && key === 'ItemWithIndex')) assert.equal(value, root[key], 'Shared module identity: ' + subpath + '/' + key);
+  for (const [key, value] of Object.entries(module)) if (key in root) assert.equal(value, root[key], 'Shared module identity: ' + subpath + '/' + key);
 }
 const source = new root.SourceCache(item => item.id);
 assert(source.connect() instanceof Observable, 'RxJS must remain an external peer');
@@ -60,6 +60,17 @@ const listSubscription = list.connect().pipe(root.toCollection()).subscribe(item
 list.addRange(['a', 'b', 'a']); list.move(2, 0);
 assert.deepEqual(lists.at(-1), ['a', 'a', 'b']);
 listSubscription.unsubscribe(); list.dispose();
+const { Subject } = LOAD('rxjs');
+const model = { id: 1, Score: 1, Changed: new Subject() };
+const native = new root.SourceCache(item => item.id); const nativeValues = [];
+const nativeSubscription = native.Connect().pipe(root.AutoRefresh('Score'), root.Filter(item => item.Score >= 2), root.Bind(nativeValues)).subscribe();
+native.AddOrUpdate(model); assert.equal(nativeValues.length, 0);
+model.Score = 2; model.Changed.next({ Sender: model, PropertyName: 'Score', Value: 2, OldValue: 1 });
+assert.equal(nativeValues[0], model, 'Native property streams must update cache pipelines');
+let disposed = 0;
+const lifetime = native.Connect().pipe(root.SubscribeMany(() => ({ Dispose() { disposed++; } }))).subscribe();
+native.RemoveKey(1); assert.equal(disposed, 1); assert.equal(nativeValues.length, 0);
+lifetime.unsubscribe(); nativeSubscription.unsubscribe(); native.Dispose();
 `;
   await writeFile(join(consumer, 'consumer.mjs'), `import assert from 'node:assert/strict';\nimport { Observable } from 'rxjs';\n${behavior.replaceAll('LOAD(', 'await import(')}`);
   await writeFile(join(consumer, 'consumer.cjs'), `const assert = require('node:assert/strict');\nconst { Observable } = require('rxjs');\n${behavior.replaceAll('LOAD(', 'require(')}`);
