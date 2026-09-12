@@ -8,6 +8,8 @@ export type Comparer<T> = ((left: T, right: T) => number) | { compare(left: T, r
 export type EqualityComparer<T> = ((left: T, right: T) => boolean) | { equals(left: T, right: T): boolean } | { Equals(left: T, right: T): boolean };
 export type ChangeOperator<T, R = T, K = unknown, RK = K> = OperatorFunction<ChangeSet<T, K>, ChangeSet<R, RK>>;
 export type ChangeSource<T, K = unknown> = Observable<ChangeSet<T, K>> | ReadonlyCache<T, K> | ReadonlyList<T>;
+export type DisposableLike = TeardownLogic | { dispose(): void } | { Dispose(): void };
+export type PropertyPath<T> = keyof T | `${Extract<keyof T, string>}.${string}`;
 export interface Disposable { dispose(): void; Dispose(): void; unsubscribe(): void; readonly closed?: boolean; }
 export interface FluentObservable<T> extends Observable<T> {
   Subscribe: Observable<T>['subscribe']; Pipe: Observable<T>['pipe'];
@@ -19,7 +21,7 @@ export interface DataObservable<T, K = unknown> extends FluentObservable<ChangeS
   TransformAsync<R>(factory: AsyncSelector<T, R, K>, options?: AsyncOptions<T, K>): DataObservable<R, K>;
   FilterOnObservable(selector: Selector<T, ObservableInput<boolean>, K>, options?: AsyncOptions<T, K>): DataObservable<T, K>;
   TransformOnObservable<R>(selector: AsyncSelector<T, R, K>, options?: AsyncOptions<T, K>): DataObservable<R, K>;
-  AutoRefresh(property?: keyof T | ((item: T) => unknown), options?: RefreshOptions): DataObservable<T, K>;
+  AutoRefresh(property?: PropertyPath<T> | ((item: T) => unknown), options?: RefreshOptions): DataObservable<T, K>;
   AutoRefreshOnObservable(selector: Selector<T, ObservableInput<unknown>, K>, options?: RefreshOptions): DataObservable<T, K>;
   Sort(comparer?: Comparer<T> | Observable<Comparer<T>>, options?: SortConfiguration | Observable<unknown>): DataObservable<T, K>;
   SortBy<R>(selector: KeySelector<T, R>, direction?: SortDirection, options?: SortConfiguration): DataObservable<T, K>;
@@ -27,9 +29,9 @@ export interface DataObservable<T, K = unknown> extends FluentObservable<ChangeS
   Virtualise(requests: VirtualRequestLike | Observable<VirtualRequestLike>): DataObservable<T, K>;
   Virtualize(requests: VirtualRequestLike | Observable<VirtualRequestLike>): DataObservable<T, K>;
   Top(size: number): DataObservable<T, K>; Top(comparer: Comparer<T> | Observable<Comparer<T>>, size: number): DataObservable<T, K>; Reverse(): DataObservable<T, K>;
-  SortAndBind(target: BindingTarget<T>, comparer?: Comparer<T>, options?: SortConfiguration): DataObservable<T, K>;
-  SortAndBind(comparer: Comparer<T> | Observable<Comparer<T>>, target: BindingTarget<T>, options?: SortConfiguration): DataObservable<T, K>;
-  Bind(target: BindingTarget<T>): DataObservable<T, K>;
+  SortAndBind(target: BindingTarget<T, K>, comparer?: Comparer<T>, options?: SortConfiguration): DataObservable<T, K>;
+  SortAndBind(comparer: Comparer<T> | Observable<Comparer<T>>, target: BindingTarget<T, K>, options?: SortConfiguration): DataObservable<T, K>;
+  Bind(target: BindingTarget<T, K>): DataObservable<T, K>;
   ToCollection(): FluentObservable<T[]>;
   ToSortedCollection<R>(selectorOrComparer?: KeySelector<T, R> | Comparer<T>, direction?: SortDirection): FluentObservable<T[]>;
   AsObservableCache(keySelector?: KeySelector<T, K>): ObservableCache<T, K>;
@@ -53,7 +55,7 @@ export interface DataObservable<T, K = unknown> extends FluentObservable<ChangeS
   StdDev(selector?: Selector<T, number, K>, fallback?: number): FluentObservable<number>;
   IsEmpty(): FluentObservable<boolean>; IsNotEmpty(): FluentObservable<boolean>;
   DisposeMany(disposer?: (item: T) => void): DataObservable<T, K>;
-  SubscribeMany(selector: Selector<T, TeardownLogic | Disposable, K>): DataObservable<T, K>;
+  SubscribeMany(selector: Selector<T, DisposableLike, K>): DataObservable<T, K>;
   MergeMany<R>(selector: Selector<T, ObservableInput<R>, K>): FluentObservable<R>;
   OnItemAdded(action: Selector<T, void, K>): DataObservable<T, K>;
   OnItemUpdated(action: (current: T, previous: T, key: K) => void): DataObservable<T, K>;
@@ -216,7 +218,11 @@ export interface PageRequestLike { page: number; size: number; }
 export interface VirtualRequestLike { startIndex: number; size: number; }
 export interface PageResponse { page: number; size: number; totalSize: number; pages: number; }
 export interface VirtualResponse { startIndex: number; size: number; totalSize: number; }
-export type BindingTarget<T> = T[] | SourceList<T> | ((items: T[], changes: ChangeSet<T>) => void) | { next(items: T[]): void };
+/** A delta target consumes the original batch, including sorting and range metadata. */
+export type ChangeSetBindingTarget<T, K = unknown> = { ApplyChanges(changes: ChangeSet<T, K>): unknown } | { applyChanges(changes: ChangeSet<T, K>): unknown };
+export interface PascalCaseListUpdater<T> { Clear(): unknown; AddRange(items: Iterable<T>): unknown; }
+export interface PascalCaseCollectionTarget<T> { Edit(action: (collection: PascalCaseListUpdater<T>) => void): unknown; }
+export type BindingTarget<T, K = unknown> = T[] | SourceList<T> | SourceCache<T, K> | ChangeSetBindingTarget<T, K> | PascalCaseCollectionTarget<T> | ((items: T[], changes: ChangeSet<T, K>) => void) | { load(items: T[]): unknown } | { next(items: T[]): void };
 export function filter<T, K = unknown>(predicate: Predicate<T, K> | Observable<Predicate<T, K>>, reapplyOrOptions?: Observable<unknown> | FilterOptions | boolean, suppressEmptyChangeSets?: boolean): ChangeOperator<T, T, K>;
 export function filter<T, S, K = unknown>(state: Observable<S>, predicate: (state: S, item: T, key: K) => boolean, suppressEmptyChangeSets?: boolean): ChangeOperator<T, T, K>;
 export const filterImmutable: typeof filter;
@@ -244,10 +250,10 @@ export const sortAndVirtualize: typeof sortAndVirtualise;
 export function sortBy<T, R, K = unknown>(selector: KeySelector<T, R>, direction?: SortDirection, options?: SortConfiguration): ChangeOperator<T, T, K>;
 export function sortBy<T, K = unknown>(property: keyof T, direction?: SortDirection, options?: SortConfiguration): ChangeOperator<T, T, K>;
 export function toCollection<T, K = unknown>(): OperatorFunction<ChangeSet<T, K>, T[]>;
-export function bind<T, K = unknown>(target: BindingTarget<T>): ChangeOperator<T, T, K>;
+export function bind<T, K = unknown>(target: BindingTarget<T, K>): ChangeOperator<T, T, K>;
 export const bindToObservableList: typeof bind; export const bindToObservableCollection: typeof bind;
-export function sortAndBind<T, K = unknown>(target: BindingTarget<T>, comparer?: Comparer<T>, options?: SortConfiguration): ChangeOperator<T, T, K>;
-export function sortAndBind<T, K = unknown>(comparer: Comparer<T> | Observable<Comparer<T>>, target: BindingTarget<T>, options?: SortConfiguration): ChangeOperator<T, T, K>;
+export function sortAndBind<T, K = unknown>(target: BindingTarget<T, K>, comparer?: Comparer<T>, options?: SortConfiguration): ChangeOperator<T, T, K>;
+export function sortAndBind<T, K = unknown>(comparer: Comparer<T> | Observable<Comparer<T>>, target: BindingTarget<T, K>, options?: SortConfiguration): ChangeOperator<T, T, K>;
 export function asObservableCache<T, K>(source: Observable<ChangeSet<T, K>>, keySelector?: KeySelector<T, K>): ObservableCache<T, K>;
 export function asObservableCache<T, K>(keySelector?: KeySelector<T, K>): (source: Observable<ChangeSet<T, K>>) => ObservableCache<T, K>;
 export function asObservableList<T>(source: Observable<ChangeSet<T>>): ObservableList<T>;
@@ -261,23 +267,29 @@ export interface RefreshOptions extends TimerOptions { throttle?: number; buffer
 export interface BufferOptions extends TimerOptions { initialPauseState?: boolean; timeout?: number; }
 export interface AsyncOptions<T = unknown, K = unknown> { onError?: (error: { error: unknown; item: T; key: K }) => void; waitForCompletion?: boolean; maximumConcurrency?: number; transformOnRefresh?: boolean; }
 export type AsyncSelector<T, R, K = unknown> = (item: T, key: K, previous: R | undefined, signal: AbortSignal) => ObservableInput<R> | R;
-export interface PropertyValue<T, V = unknown> { sender: T; propertyName: PropertyKey; value: V; previous?: V; }
+export interface PropertyValue<T, V = unknown> { sender: T; propertyName: PropertyKey | ((item: T) => V) | null | undefined; value: V; previous?: V; }
+/** PropertyChanged/Changed observables are discovered structurally; no ReactiveWeb dependency is required. */
+export interface ReactivePropertyNotification<T, V = unknown> { Sender: T; PropertyName: PropertyKey | null | undefined; Value?: V; OldValue?: V; }
 export function notifyPropertyChanged<T, P extends keyof T>(item: T, propertyName: P, previous?: T[P]): void;
+export function notifyPropertyChanged<T>(item: T, propertyName?: null | ''): void;
 export function createObservableObject<T extends object>(item: T): T;
 export const observableObject: typeof createObservableObject;
 export function whenPropertyChanged<T, P extends keyof T>(itemOrChanges: T | Observable<ChangeSet<T>>, property: P, notifyInitial?: boolean): Observable<PropertyValue<T, T[P]>>;
 export function whenPropertyChanged<T, V>(itemOrChanges: T | Observable<ChangeSet<T>>, property: (item: T) => V, notifyInitial?: boolean): Observable<PropertyValue<T, V>>;
+export function whenPropertyChanged<T, V = unknown>(itemOrChanges: T | Observable<ChangeSet<T>>, property: `${Extract<keyof T, string>}.${string}`, notifyInitial?: boolean): Observable<PropertyValue<T, V>>;
+export function observeProperty<T, V>(itemOrChanges: T | Observable<ChangeSet<T>>, property: (item: T) => V, notifyInitial?: boolean): Observable<V>;
+export function observeProperty<T, V = unknown>(itemOrChanges: T | Observable<ChangeSet<T>>, property: `${Extract<keyof T, string>}.${string}`, notifyInitial?: boolean): Observable<V>;
 export function observeProperty<T, P extends keyof T>(itemOrChanges: T | Observable<ChangeSet<T>>, property: P, notifyInitial?: boolean): Observable<T[P]>;
 export const whenValueChanged: typeof observeProperty;
 export function autoRefreshOnObservable<T, K = unknown>(selector: Selector<T, ObservableInput<unknown>, K>, options?: RefreshOptions): ChangeOperator<T, T, K>;
-export function autoRefresh<T, K = unknown>(property?: keyof T | ((item: T) => unknown), options?: RefreshOptions): ChangeOperator<T, T, K>;
+export function autoRefresh<T, K = unknown>(property?: PropertyPath<T> | ((item: T) => unknown), options?: RefreshOptions): ChangeOperator<T, T, K>;
 export function filterOnObservable<T, K = unknown>(selector: Selector<T, ObservableInput<boolean> | boolean, K>, options?: AsyncOptions<T, K>): ChangeOperator<T, T, K>;
 export function transformOnObservable<T, R, K = unknown>(selector: AsyncSelector<T, R, K>, options?: AsyncOptions<T, K>): ChangeOperator<T, R, K>;
 export function transformAsync<T, R, K = unknown>(factory: AsyncSelector<T, R, K>, options?: AsyncOptions<T, K>): ChangeOperator<T, R, K>;
 export function transformSafeAsync<T, R, K = unknown>(factory: AsyncSelector<T, R, K>, onError: NonNullable<AsyncOptions<T, K>['onError']>, options?: AsyncOptions<T, K>): ChangeOperator<T, R, K>;
 export function mergeMany<T, R, K = unknown>(selector: Selector<T, ObservableInput<R>, K>): OperatorFunction<ChangeSet<T, K>, R>;
 export function mergeManyItems<T, R, K = unknown>(selector: Selector<T, ObservableInput<R>, K>): OperatorFunction<ChangeSet<T, K>, { item: T; key: K; value: R }>;
-export function subscribeMany<T, K = unknown>(selector: Selector<T, TeardownLogic | Disposable, K>): ChangeOperator<T, T, K>;
+export function subscribeMany<T, K = unknown>(selector: Selector<T, DisposableLike, K>): ChangeOperator<T, T, K>;
 export function disposeMany<T, K = unknown>(disposer?: (item: T) => void): ChangeOperator<T, T, K>;
 export function onItemAdded<T, K = unknown>(action: Selector<T, void, K>): ChangeOperator<T, T, K>;
 export function onItemUpdated<T, K = unknown>(action: (current: T, previous: T, key: K) => void): ChangeOperator<T, T, K>;
@@ -301,14 +313,14 @@ export function toObservableChangeSet<T, K>(keySelector: KeySelector<T, K>, opti
 export function toObservableChangeSet<T>(options?: ChangeSetConversionOptions<T>): OperatorFunction<T | Iterable<T>, ChangeSet<T>>;
 export function toObservableChangeSet<T, K>(options: ChangeSetConversionOptions<T, K> & { keySelector: KeySelector<T, K> }): OperatorFunction<T | Iterable<T>, ChangeSet<T, K>>;
 export const ObservableChangeSet: Readonly<{
-  create<T, K>(subscribe: (source: SourceCache<T, K>) => TeardownLogic | Disposable, keySelector: KeySelector<T, K>): Observable<ChangeSet<T, K>>;
-  create<T>(subscribe: (source: SourceList<T>) => TeardownLogic | Disposable): Observable<ChangeSet<T>>;
-  createCache<T, K>(subscribe: (source: SourceCache<T, K>) => TeardownLogic | Disposable, keySelector: KeySelector<T, K>): Observable<ChangeSet<T, K>>;
-  createList<T>(subscribe: (source: SourceList<T>) => TeardownLogic | Disposable): Observable<ChangeSet<T>>;
+  create<T, K>(subscribe: (source: SourceCache<T, K>) => DisposableLike, keySelector: KeySelector<T, K>): Observable<ChangeSet<T, K>>;
+  create<T>(subscribe: (source: SourceList<T>) => DisposableLike): Observable<ChangeSet<T>>;
+  createCache<T, K>(subscribe: (source: SourceCache<T, K>) => DisposableLike, keySelector: KeySelector<T, K>): Observable<ChangeSet<T, K>>;
+  createList<T>(subscribe: (source: SourceList<T>) => DisposableLike): Observable<ChangeSet<T>>;
 }>;
 export function asyncDisposeMany<T, K = unknown>(completedAccessor?: (completion: Observable<unknown>) => void, disposer?: (item: T) => PromiseLike<void> | void): ChangeOperator<T, T, K>;
 export function bufferInitial<T, K = unknown>(duration: number, scheduler?: SchedulerLike): ChangeOperator<T, T, K>;
-export function filterOnProperty<T, K = unknown>(property: keyof T | ((item: T) => unknown), predicate: Predicate<T, K>, options?: RefreshOptions): ChangeOperator<T, T, K>;
+export function filterOnProperty<T, K = unknown>(property: PropertyPath<T> | ((item: T) => unknown), predicate: Predicate<T, K>, options?: RefreshOptions): ChangeOperator<T, T, K>;
 export function finallySafe<T>(action: () => void): MonoTypeOperatorFunction<T>;
 export const ConnectionStatus: Readonly<{ Pending: 'pending'; Loaded: 'loaded'; Errored: 'errored'; Completed: 'completed' }>;
 export type ConnectionStatusValue = typeof ConnectionStatus[keyof typeof ConnectionStatus];

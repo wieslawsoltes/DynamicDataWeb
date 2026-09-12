@@ -1,6 +1,7 @@
 import { Subject, Subscription, asyncScheduler, observeOn, retry, timer } from 'rxjs';
 import { ChangeSet, ChangeType, ListChange, ObservableCache, Optional, SourceCache, SourceList } from './core.js';
 import { ChangeSummary, collectUpdateStats } from './extras.js';
+import { ItemWithIndex } from './kernel.js';
 
 const streamOf = source => typeof source?.connect === 'function' ? source.connect() : source;
 const equality = comparer => typeof comparer === 'function' ? comparer : comparer?.equals?.bind(comparer) ?? comparer?.Equals?.bind(comparer) ?? Object.is;
@@ -44,14 +45,7 @@ export function getChangeType(reason) {
   throw new RangeError(`Unknown list change reason: ${reason}`);
 }
 
-export class ItemWithIndex {
-  constructor(item, index) { this.item = item; this.index = index; }
-  get Item() { return this.item; }
-  get Index() { return this.index; }
-  equals(other) { return other instanceof ItemWithIndex && Object.is(this.item, other.item); }
-  Equals(other) { return this.equals(other); }
-  toString() { return `${this.item} (${this.index})`; }
-}
+export { ItemWithIndex } from './kernel.js';
 
 export function indexOfOptional(source, item, comparer) {
   const equals = equality(comparer);

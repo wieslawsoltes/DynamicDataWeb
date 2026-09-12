@@ -1,13 +1,22 @@
-# DynamicDataWeb 0.1.0
+DynamicDataWeb 0.1.1 adds native ReactiveWeb integration and lifecycle fixes.
 
-First public npm release: `@wieslawsoltes/dynamicdataweb@0.1.0`.
+- ReactiveObject property streams now drive AutoRefresh, property observation,
+  property filters and grouping directly, including nested object replacement.
+- Collection binding accepts original change batches through ApplyChanges and
+  supports .NET-style collection editing.
+- Lifecycle operators dispose .Dispose/.DisposeAsync resources and correctly
+  release subscriptions after synchronous errors and throwing cleanup callbacks.
+- Helper/root ItemWithIndex exports share their class identity.
+
+Install:
 
 ```sh
-npm install @wieslawsoltes/dynamicdataweb@0.1.0 rxjs
+npm install @wieslawsoltes/dynamicdataweb@0.1.1 rxjs
 ```
 
-Includes keyed caches, ordered lists, incremental operators, per-instance fluent .NET-style naming, TypeScript declarations, and independently usable browser bundles. CommonJS subpaths share their module graph and retain the application's external RxJS peer.
+The same verified tarball is distributed through GitHub Packages and npm with
+provenance. The release includes standalone browser modules, a static showcase,
+SHA-256 checksums and complete source archives.
 
-The release pipeline verifies source and installed consumers on Node 22 and 24, publishes immutable archives with SHA-256 checksums, deploys the showcase, and publishes the same npm tarball with provenance. Public registry checks verify downloaded bytes, installed consumers and fresh package-name installation.
-
-See [the live collection laboratory](https://wieslawsoltes.github.io/DynamicDataWeb/) and the source compatibility report for supported contracts and remaining .NET overload adaptations.
+The compatibility report documents the web adaptations; this release does not
+claim exact equivalence to every DynamicData C# overload or native collection API.

@@ -1,26 +1,29 @@
 /** Per-item observable lifetimes, property notifications and time-aware change-set operators. */
-import { Observable, Subject, ReplaySubject, Subscription, asyncScheduler, from, of, isObservable, filter as rxFilter, map, distinctUntilChanged, debounceTime, bufferTime, skip, finalize, combineLatest, fromEvent } from 'rxjs';
+import { Observable, Subject, ReplaySubject, Subscription, asyncScheduler, from, of, isObservable, filter as rxFilter, map, distinctUntilChanged, debounceTime, bufferTime, skip, finalize, combineLatest, fromEvent, share } from 'rxjs';
 import { ChangeSet, SourceCache, SourceList, applyChanges, snapshotChanges } from './core.js';
 import { filter, transformMany } from './operators.js';
 
 const cs = (changes, kind = 'cache') => new ChangeSet(changes, kind);
-const release = resource => { if (typeof resource === 'function') resource(); else if (resource?.unsubscribe) resource.unsubscribe(); else if (resource?.dispose) resource.dispose(); else if (resource?.[Symbol.dispose]) resource[Symbol.dispose](); };
+const release = resource => { if (typeof resource === 'function') resource(); else if (resource?.unsubscribe) resource.unsubscribe(); else if (typeof resource?.dispose === 'function') resource.dispose(); else if (typeof resource?.Dispose === 'function') resource.Dispose(); else if (resource?.[Symbol.dispose]) resource[Symbol.dispose](); };
 const getChanges = changes => changes?.changes ?? changes;
 
 /** Tracks list occurrences independently, so duplicate references retain distinct lifetimes. */
 function tracker(hooks = {}) {
-  const state = { kind: 'cache', entries: [], byKey: new Map() };
+  const state = { kind: 'cache', entries: [], byKey: new Map(), disposed: false };
   const add = (item, key, index = state.entries.length, previous, prior) => {
+    if (state.disposed) return;
     if (prior) prior.prior = undefined;
     const entry = { item, key, prior, active: true, subscription: new Subscription() };
     if (state.kind === 'cache') { const old = state.byKey.get(key); if (old) { index = state.entries.indexOf(old); remove(old); } state.byKey.set(key, entry); }
     state.entries.splice(Math.max(0, index), 0, entry); hooks.add?.(entry, previous); return entry;
   };
-  const remove = entry => { if (!entry) return; entry.active = false; const index = state.entries.indexOf(entry); if (index >= 0) state.entries.splice(index, 1); if (state.kind === 'cache' && state.byKey.get(entry.key) === entry) state.byKey.delete(entry.key); entry.subscription.unsubscribe(); hooks.remove?.(entry, index); };
+  const remove = entry => { if (!entry) return; entry.active = false; const index = state.entries.indexOf(entry); if (index >= 0) state.entries.splice(index, 1); if (state.kind === 'cache' && state.byKey.get(entry.key) === entry) state.byKey.delete(entry.key); try { entry.subscription.unsubscribe(); } finally { hooks.remove?.(entry, index); } };
   const at = change => state.kind === 'cache' ? state.byKey.get(change.key) : state.entries[change.currentIndex >= 0 ? change.currentIndex : change.previousIndex >= 0 ? change.previousIndex : state.entries.findIndex(entry => entry.item === change.current)];
   state.apply = changes => {
+    if (state.disposed) return;
     state.kind = changes.kind ?? state.kind;
     for (const change of getChanges(changes)) {
+      if (state.disposed) break;
       const reason = change.reason;
       if (reason === 'add') add(change.current, change.key, change.currentIndex >= 0 ? change.currentIndex : state.entries.length);
       else if (reason === 'addRange') { const range = change.range ?? { items: change.current ?? [], index: change.currentIndex }; let index = range.index >= 0 ? range.index : state.entries.length; for (const item of range.items) add(item, undefined, index++); }
@@ -34,20 +37,75 @@ function tracker(hooks = {}) {
     if (state.kind === 'cache' && Array.isArray(changes.keys)) { const ordered = changes.keys.map(key => state.byKey.get(key)).filter(Boolean); const included = new Set(ordered); state.entries = [...ordered, ...state.entries.filter(entry => !included.has(entry))]; }
   };
   state.erase = remove;
-  state.dispose = () => { for (const entry of [...state.entries]) remove(entry); };
+  state.dispose = () => {
+    state.disposed = true;
+    const errors = [];
+    for (const entry of [...state.entries]) { try { remove(entry); } catch (error) { errors.push(error); } }
+    if (errors.length === 1) throw errors[0];
+    if (errors.length) throw new AggregateError(errors, 'Item subscriptions failed to dispose');
+  };
   return state;
 }
 
 const notifications = new WeakMap();
+const notificationStreams = new WeakMap();
 const proxyTargets = new WeakMap();
 const objectProxies = new WeakMap();
-function propertyEvents(item) { const target = proxyTargets.get(item) ?? item; if (target == null || (typeof target !== 'object' && typeof target !== 'function')) throw new TypeError('Property notifications require an object'); let subject = notifications.get(target); if (!subject) notifications.set(target, subject = new Subject()); return subject; }
-function readProperty(item, property) { if (typeof property === 'function') return property(item); if (property == null) return item; return String(property).split('.').reduce((value, part) => value?.[part], item); }
-export function notifyPropertyChanged(item, propertyName, previous) { propertyEvents(item).next({ sender: item, propertyName, value: readProperty(item, propertyName), previous }); }
+const isObject = value => value != null && (typeof value === 'object' || typeof value === 'function');
+const allProperties = name => name == null || name === '';
+function propertySubject(item) {
+  const target = proxyTargets.get(item) ?? item;
+  if (!isObject(target)) throw new TypeError('Property notifications require an object');
+  let subject = notifications.get(target);
+  if (!subject) notifications.set(target, subject = new Subject());
+  return subject;
+}
+/** Select one alias only: ReactiveWeb exposes the same stream under several names. */
+function nativePropertyEvents(item) {
+  for (const name of ['PropertyChanged', 'Changed', 'propertyChanged', 'changed']) {
+    const stream = item[name];
+    if (isObservable(stream)) return stream;
+  }
+}
+function normalizePropertyEvent(item, event) {
+  if (event == null || typeof event !== 'object') return { sender: item, propertyName: event, value: undefined, previous: undefined };
+  return {
+    sender: event.sender ?? event.Sender ?? item,
+    propertyName: 'propertyName' in event ? event.propertyName : event.PropertyName,
+    value: 'value' in event ? event.value : event.Value,
+    previous: 'previous' in event ? event.previous : 'oldValue' in event ? event.oldValue : event.OldValue
+  };
+}
+/** A ref-counted connection avoids duplicate native subscriptions for shared list items. */
+function propertyEvents(item) {
+  const target = proxyTargets.get(item) ?? item;
+  propertySubject(target);
+  let stream = notificationStreams.get(target);
+  if (!stream) {
+    stream = new Observable(observer => {
+      const resources = new Subscription();
+      resources.add(propertySubject(target).subscribe(observer));
+      try {
+        const native = nativePropertyEvents(target);
+        if (native) resources.add(native.subscribe({
+          next: event => observer.next(normalizePropertyEvent(target, event)),
+          error: error => observer.error(error),
+          complete: () => observer.complete()
+        }));
+      } catch (error) { observer.error(error); }
+      return resources;
+    }).pipe(share());
+    notificationStreams.set(target, stream);
+  }
+  return stream;
+}
+function readProperty(item, property) { if (typeof property === 'function') return property(item); if (property == null) return item; if (typeof property === 'symbol') return item?.[property]; return String(property).split('.').reduce((value, part) => value?.[part], item); }
+export function notifyPropertyChanged(item, propertyName, previous) { propertySubject(item).next({ sender: item, propertyName, value: readProperty(item, propertyName), previous }); }
 /** Shallow property notification Proxy. Keep and mutate the returned object. */
 export function createObservableObject(item) {
   if (proxyTargets.has(item)) return item;
   if (objectProxies.has(item)) return objectProxies.get(item);
+  if (isObject(item) && nativePropertyEvents(item)) return item;
   const proxy = new Proxy(item, {
     set(target, property, value) { const previous = target[property]; const result = Reflect.set(target, property, value); if (result && !Object.is(previous, value)) notifyPropertyChanged(proxy, property, previous); return result; },
     deleteProperty(target, property) { const existed = Reflect.has(target, property); const previous = target[property]; const result = Reflect.deleteProperty(target, property); if (result && existed) notifyPropertyChanged(proxy, property, previous); return result; }
@@ -59,30 +117,49 @@ function changedProperty(item, property, notifyInitial = true) {
   if (typeof property === 'string' && property.includes('.')) {
     const parts = property.split('.');
     return new Observable(observer => {
-      let connections = new Subscription(), currentValue = readProperty(item, property);
+      const resources = new Subscription(), connections = new Map();
+      let currentValue;
+      resources.add(() => { for (const entry of connections.values()) entry.subscription.unsubscribe(); connections.clear(); });
       const rewire = () => {
-        connections.unsubscribe(); connections = new Subscription();
+        const desired = new Map();
         let current = item;
-        for (let depth = 0; depth < parts.length; depth++) {
-          if (current == null || typeof current !== 'object' && typeof current !== 'function') break;
-          const part = parts[depth], remaining = parts.slice(depth).join('.');
-          connections.add(propertyEvents(current).subscribe({
+        for (let depth = 0; depth < parts.length && isObject(current); depth++) {
+          const target = proxyTargets.get(current) ?? current;
+          let names = desired.get(target);
+          if (!names) desired.set(target, names = new Set());
+          names.add(parts[depth]); names.add(parts.slice(depth).join('.'));
+          current = current[parts[depth]];
+        }
+        for (const [target, entry] of connections) {
+          if (!desired.has(target)) { connections.delete(target); entry.subscription.unsubscribe(); }
+          else entry.names = desired.get(target);
+        }
+        for (const [target, names] of desired) {
+          if (connections.has(target) || observer.closed) continue;
+          const entry = { names, subscription: new Subscription() };
+          connections.set(target, entry);
+          entry.subscription.add(propertyEvents(target).subscribe({
             next(event) {
-              if (event.propertyName != null && event.propertyName !== part && event.propertyName !== remaining) return;
+              if (!allProperties(event.propertyName) && !entry.names.has(event.propertyName)) return;
               const previous = currentValue;
-              try { currentValue = readProperty(item, property); rewire(); observer.next({ sender: item, propertyName: property, value: currentValue, previous }); } catch(error) { observer.error(error); }
-            }, error: error => observer.error(error)
+              try { currentValue = readProperty(item, property); rewire(); observer.next({ sender: item, propertyName: property, value: currentValue, previous }); } catch (error) { observer.error(error); }
+            }, error: error => observer.error(error), complete() { if (target === (proxyTargets.get(item) ?? item)) observer.complete(); }
           }));
-          current = current[part];
         }
       };
-      try { rewire(); if (notifyInitial) observer.next({ sender: item, propertyName: property, value: currentValue, previous: undefined }); } catch(error) { observer.error(error); }
-      return () => connections.unsubscribe();
+      try { currentValue = readProperty(item, property); rewire(); if (notifyInitial && !observer.closed) observer.next({ sender: item, propertyName: property, value: currentValue, previous: undefined }); } catch (error) { observer.error(error); }
+      return resources;
     });
   }
   return new Observable(observer => {
-    const sub = propertyEvents(item).subscribe({ next(event) { if (typeof property === 'function' || property == null || event.propertyName === property) observer.next({ sender: item, propertyName: property, value: readProperty(item, property), previous: event.previous }); }, error: error => observer.error(error), complete: () => observer.complete() });
-    if (notifyInitial) observer.next({ sender: item, propertyName: property, value: readProperty(item, property), previous: undefined });
+    const sub = propertyEvents(item).subscribe({
+      next(event) {
+        if (typeof property === 'function' || property == null || allProperties(event.propertyName) || event.propertyName === property) {
+          try { observer.next({ sender: item, propertyName: property ?? event.propertyName, value: readProperty(item, property), previous: event.previous }); } catch (error) { observer.error(error); }
+        }
+      }, error: error => observer.error(error), complete: () => observer.complete()
+    });
+    try { if (notifyInitial && !observer.closed) observer.next({ sender: item, propertyName: property, value: readProperty(item, property), previous: undefined }); } catch (error) { observer.error(error); }
     return sub;
   });
 }
@@ -347,14 +424,21 @@ function disposalOperator(disposer, completedAccessor) {
     const check = () => { if (ended && pending === 0 && !completion.isStopped) { completion.next(undefined); completion.complete(); } };
     const dispose = item => { try { const result = disposer(item); if (result?.then) { pending++; Promise.resolve(result).then(() => { pending--; check(); }, error => { pending--; completion.error(error); }); } } catch (error) { if (completedAccessor) completion.error(error); else throw error; } };
     const state = tracker({ remove: entry => queue.push(entry) });
-    const flush = () => { const removed = queue; queue = []; for (const entry of removed) if (!state.entries.some(current => current.prior === entry && Object.is(current.item, entry.item))) dispose(entry.item); };
+    const flush = () => {
+      const removed = queue; queue = []; const errors = [];
+      for (const entry of removed) if (!state.entries.some(current => current.prior === entry && Object.is(current.item, entry.item))) {
+        try { dispose(entry.item); } catch (error) { errors.push(error); }
+      }
+      if (errors.length === 1) throw errors[0];
+      if (errors.length) throw new AggregateError(errors, 'Items failed to dispose');
+    };
     resources.add(() => { state.dispose(); flush(); ended = true; check(); });
     resources.add(source.subscribe({ next(changes) { try { state.apply(changes); observer.next(changes); flush(); } catch(error) { observer.error(error); } }, error:error => observer.error(error), complete:() => observer.complete() }));
     return resources;
   });
 }
 /** Completion accessor receives a separate observable that awaits async cleanup, even on unsubscribe. */
-export function asyncDisposeMany(completedAccessor, disposer = item => item?.[Symbol.asyncDispose] ? item[Symbol.asyncDispose]() : item?.disposeAsync ? item.disposeAsync() : release(item)) { return disposalOperator(disposer, completedAccessor); }
+export function asyncDisposeMany(completedAccessor, disposer = item => item?.[Symbol.asyncDispose] ? item[Symbol.asyncDispose]() : item?.disposeAsync ? item.disposeAsync() : item?.DisposeAsync ? item.DisposeAsync() : release(item)) { return disposalOperator(disposer, completedAccessor); }
 export const batchIf = bufferIf;
 export function bufferInitial(duration, scheduler = asyncScheduler) {
   if (!(duration >= 0)) throw new RangeError('Initial duration must be non-negative');
@@ -370,7 +454,7 @@ export const finallySafe = action => finalize(action);
 export const ConnectionStatus = Object.freeze({ Pending:'pending', Loaded:'loaded', Errored:'errored', Completed:'completed' });
 export function monitorStatus() { return source => new Observable(observer => {let loaded=false;observer.next(ConnectionStatus.Pending);return source.subscribe({next(){if(!loaded){loaded=true;observer.next(ConnectionStatus.Loaded);}},error(){observer.next(ConnectionStatus.Errored);observer.complete();},complete(){observer.next(ConnectionStatus.Completed);observer.complete();}});}); }
 export const watchValue = key => source => (typeof source.connect === 'function' ? source.connect() : source).pipe(watch(key),map(change=>change.current));
-export function whenAnyPropertyChanged(itemOrChanges, ...propertyNames) { const observe=item=>propertyEvents(item).pipe(rxFilter(event=>!propertyNames.length||propertyNames.includes(event.propertyName)),map(()=>item));return isObservable(itemOrChanges)?itemOrChanges.pipe(mergeMany(observe)):observe(itemOrChanges); }
+export function whenAnyPropertyChanged(itemOrChanges, ...propertyNames) { const observe=item=>propertyEvents(item).pipe(rxFilter(event=>!propertyNames.length||allProperties(event.propertyName)||propertyNames.includes(event.propertyName)),map(()=>item));return isObservable(itemOrChanges)?itemOrChanges.pipe(mergeMany(observe)):observe(itemOrChanges); }
 /** whenChanged(object, [property names/selectors], (object, ...values) => result). */
 export function whenChanged(item, properties, resultSelector) {
   const fields=Array.isArray(properties)?properties:[properties];

@@ -230,13 +230,12 @@ class SourceBase {
     if (predicate != null && typeof predicate !== 'function') throw new TypeError('Predicate must be a function');
     return observableDecorator(new Observable(observer => {
       if (this._disposed) { observer.complete(); return; }
-      let version = this._version - Number(!!this._inPreview), starting = true;
+      let version = this._version - Number(!!this._inPreview), starting = true, draining = false;
       const pending = [];
       let projection;
       try { projection = predicate ? (this.kind === 'cache' ? cacheFilter(this._data, predicate) : listFilter(this._data, predicate)) : null; }
       catch (error) { observer.error(error); return; }
       const receive = event => {
-        if (starting) { pending.push(event); return; }
         if (observer.closed) return;
         try {
           const segments = event.segments.filter(segment => segment.version > version);
@@ -247,16 +246,35 @@ class SourceBase {
           if (changes.length || !suppressEmpty) observer.next(changes);
         } catch (error) { observer.error(error); }
       };
+      // Initial snapshot callbacks can mutate and terminate the source before they return.
+      // Keep both deltas and terminal events in order, including writes made while draining.
+      const drain = () => {
+        if (starting || draining) return;
+        draining = true;
+        try {
+          for (let index = 0; index < pending.length && !observer.closed; index++) {
+            const notification = pending[index];
+            if (notification.kind === 'next') receive(notification.event);
+            else if (notification.kind === 'error') observer.error(notification.error);
+            else observer.complete();
+          }
+        } finally { pending.length = 0; draining = false; }
+      };
+      const enqueue = notification => { if (!observer.closed) { pending.push(notification); drain(); } };
       const stream = preview ? this._previews : this._events;
       if (stream.hasError) { observer.error(stream.thrownError); return; }
-      const sub = stream.isStopped ? null : stream.subscribe({ next: receive, error: e => observer.error(e), complete: () => observer.complete() });
+      const sub = stream.isStopped ? null : stream.subscribe({
+        next: event => enqueue({ kind: 'next', event }),
+        error: error => enqueue({ kind: 'error', error }),
+        complete: () => enqueue({ kind: 'complete' })
+      });
       if (!preview) {
         const initial = projection ? projection.initial() : snapshotChanges(this._data, this.kind, this.keySelector);
         if (initial.length || !suppressEmpty) observer.next(initial);
       }
       starting = false;
-      for (const event of pending) receive(event);
-      if (stream.isStopped) observer.complete();
+      if (!sub) pending.push({ kind: 'complete' });
+      drain();
       return sub;
     }));
   }
