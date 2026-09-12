@@ -150,3 +150,58 @@ test('constructed and appended operator records expose Pascal fields and typed l
   assert.equal(list[0].Range.Count, 2); assert.equal(list[0].Range.Index, 0);
   assert.equal(list.keys, undefined);
 });
+
+
+test('initial list and cache subscribers receive queued changes before source disposal completes', () => {
+  for (const kind of ['list', 'cache']) {
+    const source = kind === 'list' ? new SourceList([1]) : new SourceCache(value => value);
+    if (kind === 'cache') source.addOrUpdate(1);
+    const state = kind === 'list' ? [] : new Map(), trace = [];
+    const subscription = source.connect().subscribe({
+      next(changes) {
+        applyChanges(state, changes); trace.push(Array.from(state.values()));
+        if (trace.length === 1) { if (kind === 'list') source.add(2); else source.addOrUpdate(2); source.dispose(); }
+      }, complete() { trace.push('complete'); }
+    });
+    assert.deepEqual(trace, [[1], [1, 2], 'complete']);
+    assert.deepEqual(Array.from(state.values()), source.items); assert.equal(subscription.closed, true);
+    assert.equal(source._events.observed, false);
+  }
+});
+
+test('initial subscribers receive queued projected changes before a source error', () => {
+  for (const kind of ['list', 'cache']) {
+    const source = kind === 'list' ? new SourceList([1]) : new SourceCache(value => value);
+    if (kind === 'cache') source.addOrUpdate(1);
+    const state = kind === 'list' ? [] : new Map(), trace = [], expected = new Error('source failed');
+    const subscription = source.connect(value => value % 2 !== 0).subscribe({
+      next(changes) {
+        applyChanges(state, changes); trace.push(Array.from(state.values()));
+        if (trace.length === 1) {
+          if (kind === 'list') source.addRange([2, 3]); else source.addOrUpdate([2, 3]);
+          source._error(expected);
+        }
+      }, error(error) { assert.equal(error, expected); trace.push('error'); }
+    });
+    assert.deepEqual(trace, [[1], [1, 3], 'error']); assert.equal(subscription.closed, true);
+    assert.equal(source._events.observed, false);
+  }
+});
+
+test('changes produced while draining startup notifications stay behind earlier queued deltas', () => {
+  for (const kind of ['list', 'cache']) {
+    const source = kind === 'list' ? new SourceList([1]) : new SourceCache(value => value);
+    const add = value => kind === 'list' ? source.add(value) : source.addOrUpdate(value);
+    if (kind === 'cache') add(1);
+    const state = kind === 'list' ? [] : new Map(), trace = [];
+    source.connect().subscribe({
+      next(changes) {
+        applyChanges(state, changes); trace.push(Array.from(state.values()));
+        if (trace.length === 1) { add(2); add(3); }
+        else if (trace.length === 2) { add(4); source.dispose(); }
+      }, complete() { trace.push('complete'); }
+    });
+    assert.deepEqual(trace, [[1], [1, 2], [1, 2, 3], [1, 2, 3, 4], 'complete']);
+    assert.deepEqual(Array.from(state.values()), source.items);
+  }
+});
