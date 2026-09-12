@@ -1,8 +1,8 @@
 {
-  "name": "dynamicdata-rxjs",
+  "name": "@wieslawsoltes/dynamicdataweb",
   "version": "0.1.0",
   "description": "Reactive keyed caches and ordered lists for JavaScript and TypeScript, powered by RxJS.",
-  "main": "./dist/index.cjs",
+  "main": "./dist/cjs/index.js",
   "scripts": {
     "test": "node --test test/*.test.js",
     "build": "node scripts/build.mjs && node scripts/prepare-demo.mjs",
@@ -11,9 +11,18 @@
     "demo": "node scripts/serve.mjs",
     "audit:api": "node docs/generate-api-mapping.mjs",
     "prepack": "npm run build",
-    "test:demo": "node --test test/demo.test.js"
+    "test:demo": "node --test test/demo.test.js",
+    "test:package": "npm run build && node scripts/package-test.mjs",
+    "check": "npm run build && npm test && npm run check:types && npm run audit:api"
   },
-  "keywords": [],
+  "keywords": [
+    "dynamicdata",
+    "rxjs",
+    "reactive",
+    "collections",
+    "cache",
+    "mvvm"
+  ],
   "author": "",
   "license": "MIT",
   "type": "module",
@@ -39,39 +48,86 @@
   ],
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
-      "import": "./src/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./src/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     },
     "./browser": "./dist/dynamicdata.js",
     "./package.json": "./package.json",
     "./core": {
-      "types": "./types/core.d.ts",
-      "import": "./src/core.js"
+      "import": {
+        "types": "./types/core.d.ts",
+        "default": "./src/core.js"
+      },
+      "require": {
+        "types": "./dist/cjs/core.d.ts",
+        "default": "./dist/cjs/core.js"
+      }
     },
     "./operators": {
-      "types": "./types/operators.d.ts",
-      "import": "./src/operators.js"
+      "import": {
+        "types": "./types/operators.d.ts",
+        "default": "./src/operators.js"
+      },
+      "require": {
+        "types": "./dist/cjs/operators.d.ts",
+        "default": "./dist/cjs/operators.js"
+      }
     },
     "./advanced": {
-      "types": "./types/advanced.d.ts",
-      "import": "./src/advanced.js"
+      "import": {
+        "types": "./types/advanced.d.ts",
+        "default": "./src/advanced.js"
+      },
+      "require": {
+        "types": "./dist/cjs/advanced.d.ts",
+        "default": "./dist/cjs/advanced.js"
+      }
     },
     "./lifecycle": {
-      "types": "./types/lifecycle.d.ts",
-      "import": "./src/lifecycle.js"
+      "import": {
+        "types": "./types/lifecycle.d.ts",
+        "default": "./src/lifecycle.js"
+      },
+      "require": {
+        "types": "./dist/cjs/lifecycle.d.ts",
+        "default": "./dist/cjs/lifecycle.js"
+      }
     },
     "./extras": {
-      "types": "./types/extras.d.ts",
-      "import": "./src/extras.js"
+      "import": {
+        "types": "./types/extras.d.ts",
+        "default": "./src/extras.js"
+      },
+      "require": {
+        "types": "./dist/cjs/extras.d.ts",
+        "default": "./dist/cjs/extras.js"
+      }
     },
     "./helpers": {
-      "types": "./types/helpers.d.ts",
-      "import": "./src/helpers.js"
+      "import": {
+        "types": "./types/helpers.d.ts",
+        "default": "./src/helpers.js"
+      },
+      "require": {
+        "types": "./dist/cjs/helpers.d.ts",
+        "default": "./dist/cjs/helpers.js"
+      }
     },
     "./kernel": {
-      "types": "./types/kernel.d.ts",
-      "import": "./src/kernel.js"
+      "import": {
+        "types": "./types/kernel.d.ts",
+        "default": "./src/kernel.js"
+      },
+      "require": {
+        "types": "./dist/cjs/kernel.d.ts",
+        "default": "./dist/cjs/kernel.js"
+      }
     }
   },
   "peerDependencies": {
@@ -84,5 +140,12 @@
   "homepage": "https://wieslawsoltes.github.io/DynamicDataWeb/",
   "bugs": {
     "url": "https://github.com/wieslawsoltes/DynamicDataWeb/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

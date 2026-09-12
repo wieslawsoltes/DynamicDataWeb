@@ -1,4 +1,4 @@
-# DynamicData RxJS
+# DynamicDataWeb
 
 [Web demo](https://wieslawsoltes.github.io/DynamicDataWeb/) · [Source repository](https://github.com/wieslawsoltes/DynamicDataWeb)
 
@@ -16,19 +16,19 @@ npm run build
 npm run demo
 ```
 
-The demo opens at `http://localhost:4173`. The GitHub Pages workflow in `.github/workflows/pages.yml` validates each push to `main`, updates a static copy on `gh-pages`, and deploys the built demo using GitHub's official Pages artifact and deployment actions. It can also be run manually. Deployment runs from `main` through the `github-pages` environment. No backend, account, API key, CDN or remote runtime dependency is required. The sample market data is generated locally and is not financial data.
+The demo opens at `http://localhost:4173`. The CI and distribution workflow validates Node 22 and 24 consumers, publishes immutable release archives, and deploys the built demo using GitHub's official Pages artifact and deployment actions. It can also be run manually. Deployment runs from `main` through the `github-pages` environment. No backend, account, API key, CDN or remote runtime dependency is required. The sample market data is generated locally and is not financial data.
 
 ## Use in a JavaScript application
 
-Install the included npm tarball into your application together with RxJS:
+Install the public npm package together with its RxJS peer:
 
 ```sh
-npm install ./dynamicdata-rxjs-0.1.0.tgz rxjs@^7.8.2
+npm install @wieslawsoltes/dynamicdataweb rxjs@^7.8.2
 ```
 
 ```js
 import { BehaviorSubject } from 'rxjs';
-import { SourceCache, filter, transform, sort, bind } from 'dynamicdata-rxjs';
+import { SourceCache, filter, transform, sort, bind } from '@wieslawsoltes/dynamicdataweb';
 
 const assets = new SourceCache(asset => asset.id);
 const predicate$ = new BehaviorSubject(asset => asset.enabled);
@@ -79,7 +79,7 @@ The self-contained browser ESM and global bundles include RxJS and work without 
 </script>
 ```
 
-Or load `dist/dynamicdata.global.js` with a normal script tag and use `DynamicData.SourceCache`, `DynamicData.Filter`, and `DynamicData.rxjs`. Node CommonJS consumers can `require('dynamicdata-rxjs')`. The normal package entry point keeps RxJS external for dependency sharing. Imports from `dynamicdata-rxjs/core` and `dynamicdata-rxjs/operators` avoid fluent registration and allow narrower bundles.
+Or load `dist/dynamicdata.global.js` with a normal script tag and use `DynamicData.SourceCache`, `DynamicData.Filter`, and `DynamicData.rxjs`. Node CommonJS consumers can `require('@wieslawsoltes/dynamicdataweb')`. The normal package entry point keeps RxJS external for dependency sharing. Imports from `@wieslawsoltes/dynamicdataweb/core` and `@wieslawsoltes/dynamicdataweb/operators` avoid fluent registration and allow narrower bundles.
 
 ## Included capabilities
 
@@ -116,3 +116,7 @@ Cache edits are expected O(1) per key. Cache filter/transform and several aggreg
 DynamicData is MIT licensed, Copyright (c) Roland Pheasant 2011–2022. Its license is retained in `LICENSE`. RxJS is Apache-2.0 licensed; its notice and license are retained in `docs/RXJS-LICENSE.txt`. See `NOTICE`. This port is not an official release from either upstream project.
 
 The upstream inventory includes all public types and method signatures at the pinned revision, plus immutable source links. [UPSTREAM-API.md](docs/UPSTREAM-API.md), [API-MAPPING.md](docs/API-MAPPING.md), and the machine-readable JSON files allow independent review. No unimplemented overload is certified merely because an export has the same name.
+
+## Releases and npm publishing
+
+Tagged versions are available on [npm](https://www.npmjs.com/package/@wieslawsoltes/dynamicdataweb), GitHub Packages, and [GitHub Releases](https://github.com/wieslawsoltes/DynamicDataWeb/releases). Each release includes the npm tarball, browser bundles, complete showcase, and SHA-256 checksums. Publishing verifies the exact tarball before and after npm publication, including installed ESM, CommonJS and strict TypeScript consumers and RxJS interoperability. See [publishing instructions](docs/publishing.md) for release preparation, token setup, provenance and safe retries.
