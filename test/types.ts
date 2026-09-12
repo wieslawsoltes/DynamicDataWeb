@@ -9,14 +9,14 @@ import {
   valueOr, convertOptional, firstOrOptional, indexOfMany, retryWithBackOff,
   scheduleRecurringAction, type DataObservable, type Node,
   expireAfter, limitSizeTo, top, sortAndBind,
-} from 'dynamicdata-rxjs';
-import { SourceCache as CoreCache } from 'dynamicdata-rxjs/core';
-import { filter as moduleFilter, Transform as ModuleTransform } from 'dynamicdata-rxjs/operators';
-import { groupOn as moduleGroup } from 'dynamicdata-rxjs/advanced';
-import { autoRefresh as moduleRefresh } from 'dynamicdata-rxjs/lifecycle';
-import { queryWhenChanged as moduleQuery } from 'dynamicdata-rxjs/extras';
-import { asAggregator as moduleAggregate } from 'dynamicdata-rxjs/helpers';
-import { firstOrOptional as moduleOptional } from 'dynamicdata-rxjs/kernel';
+} from '@wieslawsoltes/dynamicdataweb';
+import { SourceCache as CoreCache } from '@wieslawsoltes/dynamicdataweb/core';
+import { filter as moduleFilter, Transform as ModuleTransform } from '@wieslawsoltes/dynamicdataweb/operators';
+import { groupOn as moduleGroup } from '@wieslawsoltes/dynamicdataweb/advanced';
+import { autoRefresh as moduleRefresh } from '@wieslawsoltes/dynamicdataweb/lifecycle';
+import { queryWhenChanged as moduleQuery } from '@wieslawsoltes/dynamicdataweb/extras';
+import { asAggregator as moduleAggregate } from '@wieslawsoltes/dynamicdataweb/helpers';
+import { firstOrOptional as moduleOptional } from '@wieslawsoltes/dynamicdataweb/kernel';
 
 interface Person { id: number; name: string; active: boolean; score: number; parentId?: number; }
 interface View { id: number; label: string; }

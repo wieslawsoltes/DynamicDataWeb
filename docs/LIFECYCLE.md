@@ -10,7 +10,7 @@ JavaScript has no built-in equivalent of `INotifyPropertyChanged`. Keep and muta
 import {
   SourceCache, createObservableObject, autoRefresh,
   filter, sort, page, bind,
-} from 'dynamicdata-rxjs';
+} from '@wieslawsoltes/dynamicdataweb';
 
 const people = new SourceCache(person => person.id);
 const person = createObservableObject({ id: 1, name: 'Ada', active: true, score: 10 });
@@ -50,7 +50,7 @@ The proxy is shallow. A write through the original unwrapped object cannot be in
 
 ```js
 import { BehaviorSubject } from 'rxjs';
-import { SourceCache, filterOnObservable, transformOnObservable, bind } from 'dynamicdata-rxjs';
+import { SourceCache, filterOnObservable, transformOnObservable, bind } from '@wieslawsoltes/dynamicdataweb';
 
 const source = new SourceCache(item => item.id);
 const row = { id: 1, visible: new BehaviorSubject(true), label: new BehaviorSubject('Ready') };
@@ -76,7 +76,7 @@ source.dispose();
 ## Async transformations and cancellation
 
 ```js
-import { transformAsync } from 'dynamicdata-rxjs';
+import { transformAsync } from '@wieslawsoltes/dynamicdataweb';
 
 const details = source.connect().pipe(
   transformAsync(
@@ -105,7 +105,7 @@ Cancellation is cooperative: a promise that ignores the supplied signal can cont
 `disposeMany(disposer?)` disposes removed and replaced items **after** forwarding their changes. An update to the identical object does not dispose that retained object. Completion, error and unsubscription dispose the remaining objects. With no argument, it accepts `unsubscribe`, `dispose`, `Symbol.dispose`, or an item that is itself a cleanup function.
 
 ```js
-import { asyncDisposeMany } from 'dynamicdata-rxjs';
+import { asyncDisposeMany } from '@wieslawsoltes/dynamicdataweb';
 
 let disposalsCompleted;
 const connection = resources.connect().pipe(
@@ -138,7 +138,7 @@ The pipeable expiry and size operators affect the downstream view. The direct-so
 
 ```js
 import { asyncScheduler } from 'rxjs';
-import { SourceCache, limitSizeTo, expireAfter } from 'dynamicdata-rxjs';
+import { SourceCache, limitSizeTo, expireAfter } from '@wieslawsoltes/dynamicdataweb';
 
 const sourceCache = new SourceCache(item => item.id);
 const evictions = limitSizeTo(sourceCache, 1_000).subscribe(removedPairs => {
