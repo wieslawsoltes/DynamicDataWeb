@@ -1,12 +1,23 @@
 # DynamicDataWeb
 
-[Web demo](https://wieslawsoltes.github.io/DynamicDataWeb/) · [Source repository](https://github.com/wieslawsoltes/DynamicDataWeb)
+[![CI and distribution](https://github.com/wieslawsoltes/DynamicDataWeb/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wieslawsoltes/DynamicDataWeb/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/%40wieslawsoltes%2Fdynamicdataweb)](https://www.npmjs.com/package/@wieslawsoltes/dynamicdataweb)
+[![npm downloads](https://img.shields.io/npm/dm/%40wieslawsoltes%2Fdynamicdataweb)](https://www.npmjs.com/package/@wieslawsoltes/dynamicdataweb)
+[![Latest release](https://img.shields.io/github/v/release/wieslawsoltes/DynamicDataWeb)](https://github.com/wieslawsoltes/DynamicDataWeb/releases/latest)
+[![License](https://img.shields.io/github/license/wieslawsoltes/DynamicDataWeb)](LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-GitHub%20Pages-blue)](https://wieslawsoltes.github.io/DynamicDataWeb/)
+
+[Web demo](https://wieslawsoltes.github.io/DynamicDataWeb/) ·
+[Releases](https://github.com/wieslawsoltes/DynamicDataWeb/releases) ·
+[Compatibility](docs/COMPATIBILITY.md) · [Publishing](docs/publishing.md)
 
 Reactive keyed caches and ordered lists for JavaScript and TypeScript, built on **RxJS 7.8.2**. The package supplies actual RxJS observables, pipeable collection operators, and an opt-in-per-instance fluent API. It does not modify the global RxJS Observable prototype.
 
 This is a substantial web adaptation of DynamicData, pinned to upstream commit `ef790af138811c3268c9bb687886c2acbd0b66c0` (10.0 preview). It includes counterparts for all 118 core cache/list method names. **Name coverage does not establish identical behavior for all 437 C# overloads.** Read [the compatibility report](docs/COMPATIBILITY.md) for exact adaptations, tested contracts and remaining boundaries.
 
 ## Run the project
+
+Use **Node 22 or newer** for development and Node consumers.
 
 ```sh
 npm ci
