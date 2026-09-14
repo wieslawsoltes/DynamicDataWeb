@@ -1,6 +1,6 @@
 # DynamicDataWeb.Blazor
 
-Install `DynamicDataWeb.Blazor` 0.2.0 for .NET 8/.NET 10. The package includes the actual JavaScript engine and RxJS as local static assets for interactive WebAssembly and Server.
+Install `DynamicDataWeb.Blazor` 0.2.1 for .NET 8/.NET 10. The package includes the actual JavaScript engine and RxJS as local static assets for interactive WebAssembly and Server.
 
 ## Collections and Razor views
 
