@@ -1,0 +1,57 @@
+@page "/"
+@namespace DynamicDataWebBlazorSample
+@using DynamicDataWeb.Blazor
+@using Microsoft.AspNetCore.Components
+@implements IAsyncDisposable
+<main>
+    <h1>DynamicDataWeb + Blazor</h1>
+    <p>A real browser SourceCache and RxJS collection stream, rendered by Razor templates.</p>
+    <button id="action" @onclick="Add" disabled="@(!_ready)">Add item and verify notification</button>
+    <button id="toggle" @onclick="Toggle">@(_show ? "Unmount" : "Mount")</button>
+    @if (_show) {
+        <DynamicDataProvider Ready="Initialize">
+            <ChildContent Context="runtime">
+                @if (_cache is not null) {
+                    <DynamicDataView TItem="Item" Source="_cache">
+                        <ChildContent Context="items"><p>Live items: @items.Count</p><ul>@foreach (var item in items) { <li @key="item.Id">@item.Name</li> }</ul></ChildContent>
+                    </DynamicDataView>
+                }
+            </ChildContent>
+        </DynamicDataProvider>
+    }
+    <output id="status">@_status</output><output id="result">@_result</output>
+    <InteropProbe />
+</main>
+@code {
+    public sealed record Item(int Id, string Name);
+    private SourceCache<Item, int>? _cache;
+    private BrowserSubscription? _observation;
+    private TaskCompletionSource<int>? _notification;
+    private bool _show = true, _ready;
+    private int _count;
+    private string _status = "Loading", _result = "";
+    private async Task Initialize(BrowserModule module)
+    {
+        _count = 2; _cache = await SourceCache<Item, int>.CreateAsync(module, "id");
+        await _cache.AddOrUpdateManyAsync([new(1, "First item"), new(2, "Second item")]);
+        _observation = await _cache.ObserveItemsAsync(items => { _notification?.TrySetResult(items.Length); return Task.CompletedTask; });
+        _ready = true; _status = "Ready";
+    }
+    private async Task Add()
+    {
+        _notification = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var expected = ++_count;
+        await _cache!.AddOrUpdateAsync(new(expected, $"Item {expected}"));
+        var observed = await _notification.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        var lookup = await _cache.LookupAsync(expected);
+        if (observed != expected || await _cache.GetCountAsync() != expected || !lookup.Found) throw new InvalidOperationException("The native cache or observable notification failed.");
+        _result = "Passed";
+    }
+    private async Task Cleanup()
+    {
+        if (_observation is not null) { await _observation.DisposeAsync(); _observation = null; }
+        if (_cache is not null) { await _cache.DisposeAsync(); _cache = null; }
+    }
+    private async Task Toggle() { _ready = false; if (_show) await Cleanup(); _show = !_show; _status = _show ? "Loading" : "Unmounted"; _result = ""; }
+    public async ValueTask DisposeAsync() { await Cleanup(); }
+}
