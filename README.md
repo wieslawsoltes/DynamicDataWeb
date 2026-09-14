@@ -4,7 +4,7 @@ Reactive keyed caches and ordered lists for JavaScript, TypeScript and Blazor, p
 
 [![npm](https://img.shields.io/npm/v/%40wieslawsoltes%2Fdynamicdataweb)](https://www.npmjs.com/package/@wieslawsoltes/dynamicdataweb)
 [![npm downloads](https://img.shields.io/npm/dm/%40wieslawsoltes%2Fdynamicdataweb)](https://www.npmjs.com/package/@wieslawsoltes/dynamicdataweb)
-[![NuGet](https://img.shields.io/nuget/v/DynamicDataWeb.Blazor)](https://www.nuget.org/packages/DynamicDataWeb.Blazor)
+[![DynamicDataWeb.Blazor on NuGet](https://img.shields.io/nuget/v/DynamicDataWeb.Blazor?label=DynamicDataWeb.Blazor&logo=nuget)](https://www.nuget.org/packages/DynamicDataWeb.Blazor)
 [![NuGet downloads](https://img.shields.io/nuget/dt/DynamicDataWeb.Blazor)](https://www.nuget.org/packages/DynamicDataWeb.Blazor)
 [![Blazor CI](https://github.com/wieslawsoltes/DynamicDataWeb/actions/workflows/blazor.yml/badge.svg)](https://github.com/wieslawsoltes/DynamicDataWeb/actions/workflows/blazor.yml)
 
