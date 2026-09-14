@@ -1,5 +1,5 @@
 @page "/"
-@namespace DynamicDataWeb.Blazor.Sample
+@namespace DynamicDataWebBlazorSample
 @using DynamicDataWeb.Blazor
 @using Microsoft.AspNetCore.Components
 @implements IAsyncDisposable
@@ -20,6 +20,7 @@
         </DynamicDataProvider>
     }
     <output id="status">@_status</output><output id="result">@_result</output>
+    <InteropProbe />
 </main>
 @code {
     public sealed record Item(int Id, string Name);

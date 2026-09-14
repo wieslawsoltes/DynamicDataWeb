@@ -1,5 +1,9 @@
 # DynamicDataWeb.Blazor 0.2.0
 
-Add .NET 8 / .NET 10 browser-engine services, typed SourceCache/SourceList wrappers, DynamicDataProvider and a live Razor-template DynamicDataView. Bundle DynamicDataWeb and RxJS as local static assets. Include native callback descriptors, ordered observable notifications, lifetime management, complete generic native-export access, WebAssembly/Server samples, package-consumer tests and validated NuGet publishing.
+- Self-contained .NET 8/.NET 10 native engine/RxJS package with typed cache/list services and Razor live collection views.
+- Full streamed collection and lookup results, non-truncating DTO subscriptions and literal application item/key arguments.
+- Opaque native function references for returned operators, shared Razor template roots, scoped ownership and deterministic subscription disposal.
+- Actual-package WebAssembly/Server samples, native collection notification checks, Unicode/binary transfer, template callbacks and remount tests.
+- Complete root/Blazor documentation and validation-gated NuGet publication with public-payload verification, symbols and runnable samples.
 
-The implementation wraps the browser engine rather than replacing the native .NET DynamicData library. Synchronous selectors run in JavaScript; generic native interop covers operators beyond the typed convenience API.
+Native engine constraints remain applicable. Generic interop complements typed helpers, rather than claiming an exhaustive generated C# DynamicData port. Synchronous native callbacks remain browser functions.

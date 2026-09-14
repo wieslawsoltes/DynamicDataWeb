@@ -16,7 +16,7 @@ jobs:
   blazor:
     permissions:
       contents: write
-    uses: wieslawsoltes/Dockyard/.github/workflows/blazor.yml@154351f159587a0e523f3a62884b1458f66a20e8
+    uses: wieslawsoltes/Dockyard/.github/workflows/blazor.yml@4da3066e32f61c05b42563f952281fa78e1bb96a
     with:
       project: blazor/src/DynamicDataWeb.Blazor.csproj
       package_name: DynamicDataWeb
