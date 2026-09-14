@@ -1,12 +1,7 @@
-# DynamicDataWeb.Blazor 0.2.1
+# DynamicDataWeb.Blazor 0.2.2
 
-Updates the pinned interop runtime to the tested Dockyard revision `1c895b7184451071e1c7131063249d2d9eb145b9`, without introducing a Dockyard runtime dependency.
+Adopts validated shared runtime c833be49d472583b6f56225862e0aa7d201c1da7 from merged Dockyard PR #5. Fixes concurrent visual disposal, late Razor imports/creation, queued callbacks after removal and retained cleanup failures. Includes awaitable template teardown, coalesced updates and lifecycle state properties.
 
-- Preserve cyclic/deep native argument graphs and shared callback identity without mutating inputs.
-- Await concurrent native/module/subscription cleanup and asynchronous unsubscribe; continue cleanup after individual failures.
-- Preserve property, method and disposal access through native callable handles.
-- Honor initialization-wait cancellation without cancelling other callers; prevent disposed owners from starting late native work.
-- Add `CallFunctionJsonAsync<T>` for complete streamed callable results.
-- Run expanded shared JavaScript and managed regressions against actual .NET 8/.NET 10 package consumers.
+Typed SourceCache/SourceList services, full DTO notifications, native RxJS operators and live Razor views remain intact. Root and package guides identify the new version. Eight shared JavaScript lifecycle cases, managed visual/template tests and package-restored template movement/update/recreation run on .NET 8/.NET 10 in WebAssembly and Interactive Server.
 
-Typed caches/lists, RxJS pipelines, live Razor views, complete collection notifications and all native interop APIs remain available. WebAssembly and Interactive Server samples are validated before publication; downloaded public NuGet payloads are compared before creating the versioned release.
+NuGet publication remains validation-gated with complete public-payload verification and package/symbol/sample release artifacts. No runtime Dockyard/npm/CDN dependency is introduced. Native callback and engine compatibility contracts remain unchanged.

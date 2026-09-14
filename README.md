@@ -19,7 +19,7 @@ The [complete JavaScript guide](README.web.md) retains all existing API examples
 ## Blazor
 
 ```sh
-dotnet add package DynamicDataWeb.Blazor --version 0.2.1
+dotnet add package DynamicDataWeb.Blazor --version 0.2.2
 ```
 
 The .NET 8/.NET 10 package bundles the real engine and RxJS for interactive WebAssembly and Server, without a consumer npm/CDN dependency. It provides typed `SourceCache<T,TKey>` and `SourceList<T>`, full collection notifications, `DynamicDataProvider`, and `DynamicDataView<TItem>` with Razor rendering. Native object/function handles also expose advanced operators.
